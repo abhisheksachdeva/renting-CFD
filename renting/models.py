@@ -5,7 +5,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
 class MyUserManager(BaseUserManager):
-    def create_user(self, email, address, city, first_name, last_name, contact_no, password):
+    def create_user(self, email, address, city, state, country, first_name, last_name, contact_no, password):
         if not email:
             raise ValueError('Enter email')
 
@@ -13,6 +13,8 @@ class MyUserManager(BaseUserManager):
             email=self.normalize_email(email=email),
             address=address,
             city=city,
+            state=state,
+            country=country,
             first_name=first_name,
             last_name=last_name,
             contact_no=contact_no
@@ -22,8 +24,8 @@ class MyUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, address, city, first_name, last_name, contact_no, password):
-        user = self.create_user(email, address=address, city=city,
+    def create_superuser(self, email, address, city, state, country,  first_name, last_name, contact_no, password):
+        user = self.create_user(email, address=address, city=city, state=state, country=country,
                                 first_name=first_name, last_name=last_name,
                                 contact_no=contact_no, password=password)
         user.save(using=self._db)
@@ -35,6 +37,8 @@ class MyUser(AbstractBaseUser):
     email = models.EmailField(verbose_name='email address', max_length=255, unique=True, db_index=True)
     address = models.CharField(max_length=300)
     city = models.CharField(max_length=300)
+    state = models.CharField(max_length=100,default='')
+    country = models.CharField(max_length=60,default='')
     first_name = models.CharField(max_length=15)
     last_name = models.CharField(max_length=15)
     contact_no = models.CharField(max_length=10)
@@ -55,3 +59,15 @@ class MyUser(AbstractBaseUser):
     def __unicode__(self):
         return self.email
 
+
+class Posts(models.Model):
+    user = models.ForeignKey(MyUser, related_name="posts", null=True)
+    address = models.CharField(max_length=300)
+    city = models.CharField(max_length=300)
+    state = models.CharField(max_length=100)
+    country = models.CharField(max_length=60)
+    is_owner = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return str(self.id)
