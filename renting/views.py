@@ -80,3 +80,12 @@ class Login(APIView):
     def get(self, request):
         return Response({'detail': "login GET response"})
 
+
+class TokenView(APIView):
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        user = request.user
+        return Response({'detail': str(user)})
