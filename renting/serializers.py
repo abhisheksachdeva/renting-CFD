@@ -20,3 +20,12 @@ class UserRegSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
+class PostSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Posts
+        fields = ('id', 'address', 'city', 'state', 'country')
+
+    def create(self, validated_data):
+        return Posts.objects.create(**validated_data)

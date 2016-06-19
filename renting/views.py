@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.decorators import APIView
 from rest_framework.response import Response
-from renting.models import MyUser
-from renting.serializers import UserRegSerializer
+from renting.models import MyUser, Posts
+from renting.serializers import UserRegSerializer, PostSerializer
 from rest_framework import mixins
 from rest_framework import generics
 from django.http import HttpResponse
@@ -89,3 +89,26 @@ class TokenView(APIView):
     def post(self, request):
         user = request.user
         return Response({'detail': str(user)})
+
+
+class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+
+    queryset = Posts.objects.all().order_by("updated").reverse()
+    serializer_class = PostSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request,  *args, **kwargs):
+        try:
+            email = request.POST.get('email')
+            user = MyUser.objects.get_by_natural_key(email)
+        except:
+            return Response({'detail': "Incorrect title or email"})
+        post_serializer = PostSerializer(request.data)
+        if post_serializer.is_valid():
+            post_serializer.save()
+        post_id = post_serializer.data.get('id')
+        post = Posts.objects.get(id=post_id)
+        user.posts.add(post)
+        return Response({'detail': "Post Added"})
