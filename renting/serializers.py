@@ -7,7 +7,7 @@ class UserRegSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MyUser
-        fields = ('id', 'email', 'address', 'city', 'state', 'country' 'first_name', 'last_name', 'contact_no',
+        fields = ('id', 'email', 'address', 'city', 'state', 'country', 'first_name', 'last_name', 'contact_no',
                   'password', )
 
     def create(self, validated_data):
@@ -21,6 +21,7 @@ class UserRegSerializer(serializers.ModelSerializer):
         return user
 
 
+
 class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -28,4 +29,12 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ('id', 'address', 'city', 'state', 'country')
 
     def create(self, validated_data):
-        return Posts.objects.create(**validated_data)
+        return Posts.objects.create(**validated_data) 
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    posts = PostSerializer(many=True, read_only=True)
+    class Meta:
+        model = MyUser
+        fields = ('id', 'email', 'address', 'city', 'state', 'country', 'first_name', 'last_name', 'contact_no',
+                  'posts')

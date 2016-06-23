@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.decorators import APIView
 from rest_framework.response import Response
 from renting.models import MyUser, Posts
-from renting.serializers import UserRegSerializer, PostSerializer
+from renting.serializers import UserRegSerializer, PostSerializer, UserDetailSerializer
 from rest_framework import mixins
 from rest_framework import generics
 from django.http import HttpResponse
@@ -56,11 +56,14 @@ class Login(APIView):
         try:
             email = request.POST.get('email')
             password = request.POST.get('password')
+            print email, password
+            print MyUser.objects.all()
         except:
             return Response({'detail': "Enter Email and Password"})
 
         try:
             user = authenticate(email=email, password=password)
+            print user
             if not user:
                 return Response({'detail': "Email or Password was incorrect"})
         except:
@@ -91,9 +94,17 @@ class TokenView(APIView):
         return Response({'detail': str(user)})
 
 
+class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MyUser.objects.all()
+    serializer_class = UserDetailSerializer
+
+    def put(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+
 class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
 
-    queryset = Posts.objects.all().order_by("updated").reverse()
+    queryset = Posts.objects.all().order_by("created").reverse()
     serializer_class = PostSerializer
 
     def get(self, request, *args, **kwargs):
@@ -105,7 +116,7 @@ class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericA
             user = MyUser.objects.get_by_natural_key(email)
         except:
             return Response({'detail': "Incorrect title or email"})
-        post_serializer = PostSerializer(request.data)
+        post_serializer = PostSerializer(data=request.data)
         if post_serializer.is_valid():
             post_serializer.save()
         post_id = post_serializer.data.get('id')
