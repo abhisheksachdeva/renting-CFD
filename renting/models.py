@@ -1,5 +1,72 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
-# Create your models here.
+
+class MyUserManager(BaseUserManager):
+    def create_user(self, email, address, city, state, country, first_name, last_name, contact_no, password):
+        if not email:
+            raise ValueError('Enter email')
+
+        user = self.model(
+            email=self.normalize_email(email=email),
+            address=address,
+            city=city,
+            state=state,
+            country=country,
+            first_name=first_name,
+            last_name=last_name,
+            contact_no=contact_no
+
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, address, city, state, country,  first_name, last_name, contact_no, password):
+        user = self.create_user(email, address=address, city=city, state=state, country=country,
+                                first_name=first_name, last_name=last_name,
+                                contact_no=contact_no, password=password)
+        user.save(using=self._db)
+        return user
+
+
+class MyUser(AbstractBaseUser):
+
+    email = models.EmailField(verbose_name='email address', max_length=255, unique=True, db_index=True)
+    address = models.CharField(max_length=300)
+    city = models.CharField(max_length=300)
+    state = models.CharField(max_length=100,default='')
+    country = models.CharField(max_length=60,default='')
+    first_name = models.CharField(max_length=15)
+    last_name = models.CharField(max_length=15)
+    contact_no = models.CharField(max_length=10)
+    created = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=False)
+
+    REQUIRED_FIELDS = ['first_name', 'last_name']
+    USERNAME_FIELD = 'email'
+
+    objects = MyUserManager()
+
+    def get_short_name(self):
+        return self.email
+
+    def get_full_name(self):
+        return self.email
+
+    def __unicode__(self):
+        return self.email
+
+
+class Posts(models.Model):
+    user = models.ForeignKey(MyUser, related_name="posts", null=True)
+    address = models.CharField(max_length=300)
+    city = models.CharField(max_length=300)
+    state = models.CharField(max_length=100)
+    country = models.CharField(max_length=60)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return str(self.id)
